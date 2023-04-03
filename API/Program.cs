@@ -10,10 +10,15 @@ builder.Services.AddDbContext<DataContext>(opt =>
 {
     opt.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
+builder.Services.AddCors();
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
+// JorgeEsp -> siguiente línea es para indicar que se confía el acceso a localhost:4200 desde localhost:5001
+app.UseCors(builder => builder.AllowAnyHeader().AllowAnyMethod().WithOrigins("https://localhost:4200"));
+
+
 app.MapControllers();
 
 app.Run();
