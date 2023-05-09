@@ -1,5 +1,7 @@
+using API.Data;
 using API.Extensions;
 using API.Middleware;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,5 +25,21 @@ app.UseAuthentication(); // esto preguntará si hay un Token válido
 app.UseAuthorization();  // esto pregunta si el user está autorizado
 
 app.MapControllers();
+
+// a continuación para cargar la BBDD con los usuarios del fichero json
+using var scope = app.Services.CreateScope();
+var services = scope.ServiceProvider;
+try
+{
+    var context = services.GetRequiredService<DataContext>();
+    await context.Database.MigrateAsync();
+    await Seed.SeedUsers(context);
+}
+catch (Exception ex)
+{
+    var logger = services.GetService<ILogger<Program>>();
+    logger.LogError(ex, "An error occurred during migration datausers into BBDD");
+}
+// fin creación usuarios en BBDD del fichero json
 
 app.Run();
