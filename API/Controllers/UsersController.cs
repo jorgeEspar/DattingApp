@@ -1,4 +1,5 @@
 using System.Net.Security;
+using System.Security.Claims;
 using API.Data;
 using API.DTOs;
 using API.Entities;
@@ -35,6 +36,25 @@ namespace API.Controllers
         public async Task<ActionResult<MemberDto>> GetUser(string username)
         {
             return await _userRepository.GetMemberAsync(username);
+        }
+
+        [HttpPut]
+        public async Task<ActionResult> UpdateUser(MemberUpdateDto memberUpdateDto)
+        {
+            var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var user = await _userRepository.GetUserByUsernameAsync(username);
+
+            if(user == null) return NotFound();
+            
+            // vamos a mapear los campos pero todavía no guarda en bbdd
+            _mapper.Map(memberUpdateDto, user);
+            
+            // ahora guardamos en bbd. 
+            // NOTA: return NoContent(); -> es la forma de indicar que ha sido correcto y devoverá código 204
+            if(await _userRepository.SaveAllAsync()) return NoContent();
+
+            // si ha habido algún problema devolvemos BadRequest
+            return BadRequest("Failed to update user");
         }
     }
 }
